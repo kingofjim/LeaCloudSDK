@@ -39,12 +39,12 @@ class LeacloudSDK {
             xhr.timeout = 1000;
             xhr.onload = function () {
                 if (this.status == 200) {
-                    resolve(xhr.response);
+                    resolve(this.response);
                 } else {
                     reject({
                         url: url,
                         status: this.status,
-                        statusText: xhr.statusText
+                        statusText: this.statusText
                     });
                 }
             };
@@ -97,18 +97,3 @@ class LeacloudSDK {
         }
     }
 }
-
-function leacloudHttpDns(best_route) {
-    console.log("Best_route: " + best_route);
-}
-
-var sdk = new LeacloudSDK();
-var serverList = [
-    'http://httpbin.org/status/300',
-    'http://34.92.229.26/sdk_checked',
-    'http://139.159.134.84/sdk_checked',
-];
-sdk.init(serverList); // 開始測速 -> 回傳測試報告
-sdk.finished; // True = 結束    False = 進行中
-// 無論結束 或 進行中 皆可取得目前的 BestRoute
-sdk.getBestRoute(); // 快->慢 ['http://34.92.229.26', 'http://139.159.134.84']
