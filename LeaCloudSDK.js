@@ -1,35 +1,48 @@
 class LeacloudSDK {
-    best_route;
-    serverList = [];
-    result = [];
-    finished = false;
 
-    async init(serverList=[], callback) {
+    constructor() {
+        this.best_route = null;
+        this.serverList = [];
+        this.result = [];
+        this.onAjax = false;
+        this.autoTesting = true
+    }
+
+    async init(serverList=[], interval=0, callback) {
         this.serverList = serverList;
-        this.finished = true;
-        if(this.serverList.length != 0) {
-            this.nodeTest().then(callback);
+        this.onAjax = true;
+        if(this.serverList.length != 0 && this.autoTesting) {
+            await this.nodeTest();
+            if(callback!=null) callback();
         }
-        this.finished = false;
+        this.onAjax = false;
+
+        if(interval != 0 && this.autoTesting) {
+            await setTimeout(()=>this.init(this.serverList, interval, callback), interval*1000*60);
+        }
     }
     async nodeTest() {
         var formdata = new FormData();
+        let allResult = [];
         for(let i=0; i<this.serverList.length; i++) {
             try {
                 var startTime = (new Date()).getTime();
                 // await this.sleep(2000);
-                await this.makeRequest("GET", this.serverList[i]);
+                let request =  await this.makeRequest("GET", this.serverList[i]);
                 var responseTime = (new Date()).getTime() - startTime;
-                if(i==1) responseTime = 100;
                 this.result.push([this.serverList[i], responseTime, startTime]);
+                allResult.push([this.serverList[i], responseTime, startTime])
             } catch (e) {
                 console.log(e);
+                allResult.push([this.serverList[i], 0, startTime])
             }
         }
-        this.finished = false;
+        this.onAjax = false;
         this.best_route = this.pick_best_route_so_far();
-        formdata.append('result', JSON.stringify(this.result));
+        console.log(this.result);
+        formdata.append('result', JSON.stringify(allResult));
         console.log(formdata.get('result'));
+        this.result = [];
         this.submitTestResult(formdata)
     }
     makeRequest(method, url, body='') {
@@ -39,7 +52,7 @@ class LeacloudSDK {
             xhr.timeout = 1000;
             xhr.onload = function () {
                 if (xhr.status == 200) {
-                    resolve(xhr.response);
+                    resolve(url);
                 } else {
                     reject({
                         url: url,
@@ -70,7 +83,7 @@ class LeacloudSDK {
         });
     }
     submitTestResult(data) {
-        this.makeRequest("POST", "http://35.220.163.46:51000/sdk/receiver/", data)
+        this.makeRequest("POST", "http://35.220.163.46:22000/sdk/receiver/", data)
         // this.makeRequest("POST", "http://localhost:8000/sdk/receiver/", data)
     }
     sleep(ms) {
@@ -96,15 +109,18 @@ class LeacloudSDK {
             }
         }
     }
+    delBestRoute(index=0) {
+        if(this.onAjax)
+            if(index == 0) {
+                this.best_route.shift();
+            } else {
+                this.best_route.splice(index, 1);
+            }
+    }
+    setServerList(list=[]) {
+        this.serverList = list;
+    }
+    stopAutoTesting() {
+        this.autoTesting=false;
+    }
 }
-//
-// var sdk = new LeacloudSDK();
-// var serverList = [
-//     'http://httpbin.org/status/300',
-//     'http://34.92.229.26/sdk_checked',
-//     'http://139.159.134.84/sdk_checked',
-// ];
-// sdk.init(serverList); // 開始測速 -> 回傳測試報告
-// sdk.finished; // True = 結束    False = 進行中
-// // 無論結束 或 進行中 皆可取得目前的 BestRoute
-// sdk.getBestRoute(); // 快->慢 ['http://34.92.229.26', 'http://139.159.134.84']
