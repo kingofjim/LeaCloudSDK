@@ -19,7 +19,7 @@ class LeaCloudSDK {
         this.onAjax = false;
 
         if(this.interval != 0 && this.autoTesting) {
-            await setTimeout(()=>this.start(this.serverList, this.interval, this.callback), this.interval*1000*60);
+            await setTimeout(()=>this.start(), this.interval*1000*60);
         }
     }
     async nodeTest() {
