@@ -95,14 +95,15 @@ class LeaCloudSDK {
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-    pick_best_route_so_far(resultList = this.result) {
+    pick_best_route_so_far() {
+        var resultList = this.result;
         resultList.sort(
             function(x,y){
             if(x[1] < y[1]) return -1;
             else if(x[1] > y[1]) return 1;
             else return 0;
         });
-        return resultList.map(x=>new URL(x[0]).origin);
+        return resultList.map(x=>this.extractURL(x[0]));
 
     }
     getBestRoute(force=false) {
@@ -128,5 +129,11 @@ class LeaCloudSDK {
     }
     stopAutoTesting() {
         this.autoTesting=false;
+    }
+
+    extractURL(url) {
+        var re = /(http|https)?:\/\/((.*?)\/|.*)/;
+        let result = url.match(re);
+        return result[1]+'://'+result[result.length-1]
     }
 }

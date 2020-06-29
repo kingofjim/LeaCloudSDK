@@ -94,7 +94,7 @@ class LeaCloudSDK {
             else if(x[1] > y[1]) return 1;
             else return 0;
         });
-        return resultList.map(x=>new URL(x[0]).origin);
+        return resultList.map(x=>this.extractURL(x[0]));
 
     }
     getBestRoute(force=false) {
@@ -120,5 +120,11 @@ class LeaCloudSDK {
     }
     stopAutoTesting() {
         this.autoTesting=false;
+    }
+
+    extractURL(url) {
+        var re = /(http|https)?:\/\/((.*?)\/|.*)/;
+        let result = url.match(re);
+        return result[1]+'://'+result[result.length-1]
     }
 }
