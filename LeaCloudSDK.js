@@ -86,7 +86,8 @@ class LeaCloudSDK {
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
-    pick_best_route_so_far(resultList = this.result) {
+    pick_best_route_so_far() {
+        var resultList = this.result;
         resultList.sort(
             function(x,y){
             if(x[1] < y[1]) return -1;
