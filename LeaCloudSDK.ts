@@ -8,6 +8,8 @@ class LeaCloudSDK {
     result;
     onAjax;
     autoTesting;
+    localStorage;
+    localStorageExpire;
 
     constructor(param){
         this.best_route;
@@ -18,6 +20,8 @@ class LeaCloudSDK {
         this.result = [];
         this.onAjax = false;
         this.autoTesting = true;
+        this.localStorage = 'LeaCloudSDK - ' + this.serverList.toString();
+        this.localStorageExpire = 'LeaCloudSDK.expire - ' + this.serverList.toString();
     }
     async start() {
         this.onAjax = true;
@@ -48,6 +52,7 @@ class LeaCloudSDK {
         this.onAjax = false;
         this.best_route = this.pick_best_route_so_far();
         console.log(this.result);
+        this.setDefaultBestRoute(this.best_route);
         this.result = [];
         this.submitTestResult(JSON.stringify(allResult));
     }
@@ -135,5 +140,34 @@ class LeaCloudSDK {
         var re = /(http|https)?:\/\/((.*?)\/|.*)/;
         let result = url.match(re);
         return result[1]+'://'+result[result.length-1]
+    }
+
+    getDefaultBestRoute() {
+        var lsExpire = localStorage.getItem(this.localStorageExpire);
+        if(Date.now() < Number(lsExpire)) {
+            var ls = localStorage.getItem(this.localStorage);
+            if (ls != null) {
+                ls = ls.split(',');
+                let temp_index = -1;
+                this.serverList.forEach(x => {
+                    var target = this.extractURL(x);
+                    var targetIndex = ls.indexOf(target);
+                    if (targetIndex > 0) {
+                        if (temp_index == -1 || targetIndex < temp_index) temp_index = targetIndex;
+                        // else if (targetIndex < temp_index) {
+                        //     temp_index = targetIndex;
+                        // }
+                    }
+                })
+                return ls[temp_index];
+            }
+        }
+        return null;
+    }
+
+    setDefaultBestRoute(data) {
+        // console.log(localStorage.getItem(this.localStorage));
+        localStorage.setItem(this.localStorage, data);
+        localStorage.setItem(this.localStorageExpire, Date.now()+86400);
     }
 }
